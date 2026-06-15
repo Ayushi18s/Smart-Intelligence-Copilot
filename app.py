@@ -18,6 +18,7 @@ from src.data_loader import load_data
 from src.alerts import generate_alerts
 from src.insights import generate_insights
 from src.chatbot import answer_question
+print("chatbot imported successfully")
 
 from src.root_cause_engine import analyze_root_causes
 from src.forecast_engine import forecast_sales

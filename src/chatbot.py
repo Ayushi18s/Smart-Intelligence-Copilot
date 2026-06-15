@@ -1,7 +1,6 @@
 import pandas as pd
 import google.generativeai as genai
-from dotenv import load_dotenv
-import os
+
 import streamlit as st
 
 # =========================
@@ -10,12 +9,14 @@ import streamlit as st
 
 # 🔥 BEST PRACTICE (you can replace with your key)
 
-load_dotenv()
 
-genai.configure(api_key=st.secrets["AQ.Ab8RN6LDirkD69zyx1WGGpg5FfXDEHY05_KYiyC
-"])
+api_key = st.secrets.get("GEMINI_API_KEY", None)
 
+if not api_key:
+    st.error("❌ GEMINI_API_KEY not found in secrets.toml")
+    st.stop()
 
+genai.configure(api_key=api_key)
 model = genai.GenerativeModel("gemini-1.5-flash")
 
 # =========================
@@ -54,114 +55,55 @@ def answer_question(question, df):
 
     if df is None:
         return "⚠️ No dataset loaded. Please upload a file first."
-
+    
+    df.columns = df.columns.str.strip()
     question_lower = question.lower()
 
-    # =========================
-    # GREETING HANDLING
-    # =========================
+    # GREETING
     if question_lower in ["hi", "hello", "hey", "hii", "hola"]:
-        return """
-👋 Hello! I am your AI Business Analyst.
+        return "👋 Hello! I am your AI Business Analyst."
 
-You can ask me:
-• Why profit is low
-• Show sales analysis
-• Best region
-• Category insights
-"""
-
-    # =========================
-    # AI MODE TRIGGER (IMPROVED)
-    # =========================
-    ai_keywords = [
-        "why", "how", "what", "explain",
-        "insight", "trend", "analysis",
-        "analyze", "summary", "reason",
-        "compare", "problem", "issue"
-    ]
-
-
-    # =========================
-    # SALES ANALYSIS
-    # =========================
+    # SALES
+    
     if "sales" in question_lower:
+        if "Sales" not in df.columns:
+            return "❌ Sales column missing"
         total_sales = df["Sales"].sum()
         top_region = df.groupby("Region")["Sales"].sum().idxmax()
+        return f"📊 Sales: {total_sales}, Top Region: {top_region}"
 
-        return f"""
-📊 SALES ANALYSIS
-
-💰 Total Sales: ${total_sales:,.0f}
-🏆 Top Region: {top_region}
-
-🧠 Insight:
-Sales are concentrated in strong regions, but weaker regions need improvement.
-"""
-
-    # =========================
-    # PROFIT ANALYSIS
-    # =========================
-    elif "profit" in question_lower:
+    # PROFIT
+    if "profit" in question_lower:
+        if "Profit" not in df.columns:
+            return "❌ Profit column missing"
+        if "Region" not in df.columns:
+            return "❌ Region column missing"
         total_profit = df["Profit"].sum()
         worst_region = df.groupby("Region")["Profit"].sum().idxmin()
+        return f"📈 Profit: {total_profit}, Weak Region: {worst_region}"
 
-        return f"""
-📈 PROFIT ANALYSIS
-
-💰 Total Profit: ${total_profit:,.0f}
-⚠️ Weak Region: {worst_region}
-
-🧠 Insight:
-Profit leakage is mainly due to discounting and regional inefficiencies.
-"""
-
-    # =========================
-    # CATEGORY ANALYSIS
-    # =========================
-    elif "category" in question_lower:
+    # CATEGORY
+    if "category" in question_lower:
+        if "Category" not in df.columns:
+            return "❌ Category column missing"
         top_category = df.groupby("Category")["Sales"].sum().idxmax()
+        return f"📦 Top Category: {top_category}"
 
-        return f"""
-📦 CATEGORY ANALYSIS
-
-🏆 Best Category: {top_category}
-
-🧠 Insight:
-Some categories outperform due to demand and pricing advantages.
-"""
-
-    # =========================
-    # REGION ANALYSIS
-    # =========================
-    elif "region" in question_lower:
+    # REGION
+    if "region" in question_lower:
+        if "Region" not in df.columns:
+            return "❌ Region column missing"
         best_region = df.groupby("Region")["Sales"].sum().idxmax()
+        return f"🌍 Best Region: {best_region}"
 
-        return f"""
-🌍 REGION ANALYSIS
+    # AI MODE
+    ai_keywords = [
+        "why","how","what","explain",
+        "insight","analysis","compare","issue"
+    ]
 
-🏆 Best Region: {best_region}
-
-🧠 Insight:
-Regional performance varies due to demand and discount strategy.
-"""
-    # =========================
-    # AI MODE (FALLBACK)
-    # =========================
     if any(word in question_lower for word in ai_keywords):
         return ask_ai(df, question)
 
-    # =========================
-    # DEFAULT RESPONSE
-    # =========================
-    return """
-🤖 AI ANALYST
+    return "🤖 Ask me about sales, profit, region, or category"
 
-I can help you analyze your business data.
-
-Try asking:
-• "tell me about sales"
-• "why profit is low"
-• "best region"
-• "category insights"
-"""
