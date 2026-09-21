@@ -80,7 +80,7 @@ def get_best_columns(df):
 
 
     cat_cols = df.select_dtypes(
-        include="str"
+        include="object"
     ).columns.tolist()
 
 
@@ -509,7 +509,7 @@ if selected == "Overview":
             quality_score = calculate_data_quality(df)
 
             numeric_cols = len(df.select_dtypes(include="number").columns)
-            categorical_cols = len(df.select_dtypes(include="str").columns)
+            categorical_cols = len(df.select_dtypes(include="object").columns)
 
             # =========================
             # DATA QUALITY SECTION
@@ -547,7 +547,7 @@ if selected == "Overview":
             )
             c5.metric(
                 "Categorical Features",
-                len(df.select_dtypes(include='str').columns)
+                len(df.select_dtypes(include='object').columns)
             )
         st.dataframe(df.head(30))
 
@@ -792,7 +792,7 @@ elif selected == "Dashboard":
             if not any(word in c.lower() for word in ignore_words)
         ]
 
-        cat_cols = df.select_dtypes(include="str").columns.tolist()
+        cat_cols = df.select_dtypes(include="object").columns.tolist()
 
         x_col = next((c for c in num_cols if "sales" in c.lower()), num_cols[0])
         y_col = next((c for c in num_cols if "profit" in c.lower()), num_cols[1])
@@ -912,7 +912,7 @@ elif selected == "Deep Analytics":
             if not any(word in c.lower() for word in ignore_words)
         ]
 
-        cat_cols = df.select_dtypes(include="str").columns.tolist()
+        cat_cols = df.select_dtypes(include="object").columns.tolist()
 
         if len(num_cols) >= 2:
 
@@ -1359,7 +1359,7 @@ elif selected == "Reports":
 
     Key highlights:
     - Numeric fields: {len(df.select_dtypes(include='number').columns)}
-    - Categorical fields: {len(df.select_dtypes(include='str').columns)}
+    - Categorical fields: {len(df.select_dtypes(include='object').columns)}
     - Missing data: {df.isna().sum().sum()} values
     """)
     st.markdown("## 📊 Dataset KPIs")
